@@ -10,7 +10,7 @@
     "db:generate": "npm run combine-schemas && prisma generate",
     "db:migrate": "npm run combine-schemas && prisma migrate dev",
     "db:studio": "npm run combine-schemas && prisma studio",
-    "build": "nest build",
+    "build": "npm run combine-schemas && prisma generate && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
