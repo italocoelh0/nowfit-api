@@ -1,8 +1,8 @@
 model Post {
   id             Int       @id @default(autoincrement())
   content        String    @db.Text
-  imageUrl       String?
-  videoUrl       String?
+  imageUrl       Bytes?    @db.Blob
+  videoUrl       Bytes?    @db.Blob
   authorId       String
   author         User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   createdAt      DateTime  @default(now())

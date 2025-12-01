@@ -47,7 +47,7 @@ export class AuthService {
 
   async login(loginUserDto: LoginUserDto) {
     const { email, password } = loginUserDto;
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.prisma.user.findUnique({ where: { email }, include: { posts: true, comments: true, followers: true, following: true } });
 
     if (user && (await bcrypt.compare(password, user.password))) {
       const payload = { sub: user.id, username: user.username };
@@ -58,5 +58,15 @@ export class AuthService {
     } else {
       throw new UnauthorizedException('Please check your login credentials');
     }
+  }
+
+  async getProfileWithFollows(userId: string) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        followers: true,
+        following: true,
+      },
+    });
   }
 }

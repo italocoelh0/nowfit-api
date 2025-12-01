@@ -5,11 +5,9 @@ export class CreatePostDto {
   content: string;
 
   @IsOptional()
-  @IsUrl()
   imageUrl?: string;
 
   @IsOptional()
-  @IsUrl()
   videoUrl?: string;
 
   @IsOptional()

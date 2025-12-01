@@ -5,7 +5,9 @@ import { UpdatePostDto } from '../dto/update-post.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { GetUser } from 'src/decorators/get-user.decorator';
 import { CreateCommentDto } from '../dto/create-comment.dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard)
 @Controller('posts')
 export class PostsController {
@@ -19,7 +21,8 @@ export class PostsController {
 
   @Get()
   findAll() {
-    return this.postsService.findAll();
+    const posts = this.postsService.findAll();
+    return posts;
   }
 
   @Patch(':id')

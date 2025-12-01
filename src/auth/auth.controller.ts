@@ -22,9 +22,14 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  getProfile(@GetUser() user: User) {
-    // The password should already be removed by the service, but as a safeguard:
-    const { password, ...result } = user;
+  async getProfile(@GetUser() user: User) {
+    const fullUser = await this.authService.getProfileWithFollows(user.id);
+
+    if(!fullUser) {
+      throw new Error('User not found');
+    }
+
+    const { password, ...result } = fullUser;
     return result;
   }
 }

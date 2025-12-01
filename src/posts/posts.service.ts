@@ -7,52 +7,80 @@ import { PrismaService } from 'src/prisma.service';
 export class PostsService {
   constructor(private prisma: PrismaService) {}
 
-async create(createPostDto: CreatePostDto, userId: string) {
-  
-  const {
-      content,
-      imageUrl,
-      videoUrl,
-      isPriority,
-      originalPostId,
-    } = createPostDto as any;
+  private toBase64FromBytes(value: Buffer | Uint8Array | null | undefined) {
+    if (!value) return null;
+    const buf = Buffer.isBuffer(value) ? value : Buffer.from(value as any);
+    return buf.toString('base64');
+  }
 
-    if (!content) {
-      throw new BadRequestException('Erro na leitura de dados do post');
-    }
-
-    const newPostWithAuthor = await (this.prisma as any).post.create({
-      data: {
-        content,
-        imageUrl,
-        videoUrl,
-        isPriority,
-        originalPostId,
-        authorId: userId,
-      },
-      include: {
-        author: {
-          select: { id: true, name: true, username: true, userAvatar: true, isVerified: true },
-        },
-      },
-    });
-
-    const { author, ...restOfPost } = newPostWithAuthor;
-
-    // Garante que o objeto retornado tenha a mesma "forma" do que a lista de posts
+  private mapPostBinaryToBase64(post: any) {
     return {
-      ...restOfPost,
-      userId: author.id,
-      userName: author.name,
-      username: author.username,
-      userAvatar: author.userAvatar,
-      authorIsVerified: author.isVerified,
-      likedByUserIds: [], // Novo post começa com 0 curtidas
-      flamedByUserIds: [], // Novo post começa com 0 flames
-      comments: [], // Novo post começa com 0 comentários
-      timestamp: restOfPost.createdAt.toISOString(),
+      ...post,
+      imageUrl: this.toBase64FromBytes(post.imageUrl),
+      videoUrl: this.toBase64FromBytes(post.videoUrl),
     };
   }
+
+async create(createPostDto: CreatePostDto, userId: string) {
+  const {
+    content,
+    isPriority,
+    originalPostId,
+    imageUrl,
+    videoUrl,
+  } = createPostDto;
+
+  if (!content) {
+    throw new BadRequestException('Erro na leitura de dados do post');
+  }
+
+  const data: any = {
+    content,
+    isPriority,
+    originalPostId,
+    authorId: userId,
+  };
+
+if (imageUrl !== undefined) {
+  if (imageUrl === null || imageUrl === '') {
+    data.imageUrl = null;
+  } else if (typeof imageUrl === 'string') {
+    data.imageUrl = Buffer.from(imageUrl, 'base64');
+  }
+}
+
+if (videoUrl !== undefined) {
+  if (videoUrl === null || videoUrl === '') {
+    data.videoUrl = null;
+  } else if (typeof videoUrl === 'string') {
+    data.videoUrl = Buffer.from(videoUrl, 'base64');
+  }
+}
+
+  const newPostWithAuthor = await this.prisma.post.create({
+    data,
+    include: {
+      author: {
+        select: { id: true, name: true, username: true, userAvatar: true, isVerified: true },
+      },
+    },
+  });
+
+  const { author, ...restOfPost } = newPostWithAuthor;
+
+  return {
+    ...restOfPost,
+    userId: author.id,
+    userName: author.name,
+    username: author.username,
+    userAvatar: author.userAvatar,
+    authorIsVerified: author.isVerified,
+    likedByUserIds: [],
+    flamedByUserIds: [],
+    comments: [],
+    timestamp: restOfPost.createdAt.toISOString(),
+  };
+}
 
   async findAll() {
     const posts = await this.prisma.post.findMany({
@@ -72,24 +100,45 @@ async create(createPostDto: CreatePostDto, userId: string) {
       },
     });
 
-    return posts.map(post => ({
-      ...post,
-      userId: post.author.id,
-      userName: post.author.name,
-      username: post.author.username,
-      userAvatar: post.author.userAvatar,
-      authorIsVerified: post.author.isVerified,
-      likedByUserIds: post.likes.map(like => like.userId),
-      flamedByUserIds: post.flames.map(flame => flame.userId),
-      timestamp: post.createdAt.toISOString(),
-    }));
+    return posts.map(post => {
+      const mapped = this.mapPostBinaryToBase64(post);
+      return {
+        ...mapped,
+        userId: post.author.id,
+        userName: post.author.name,
+        username: post.author.username,
+        userAvatar: post.author.userAvatar,
+        authorIsVerified: post.author.isVerified,
+        likedByUserIds: post.likes.map(like => like.userId),
+        flamedByUserIds: post.flames.map(flame => flame.userId),
+        timestamp: post.createdAt.toISOString(),
+      };
+    });
   }
   
-  async update(id: number, updatePostDto: UpdatePostDto, userId: string) {
+ async update(id: number, updatePostDto: UpdatePostDto, userId: string) {
     const post = await this.findPostAndCheckOwnership(id, userId);
+    const data: any = { ...updatePostDto };
+
+    if ('imageUrl' in updatePostDto) {
+      if (updatePostDto.imageUrl === null || updatePostDto.imageUrl === '') {
+        data.imageUrl = { set: null };
+      } else if (typeof updatePostDto.imageUrl === 'string') {
+        data.imageUrl = { set: Buffer.from(updatePostDto.imageUrl, 'base64') };
+      }
+    }
+
+    if ('videoUrl' in updatePostDto) {
+      if (updatePostDto.videoUrl === null || updatePostDto.videoUrl === '') {
+        data.videoUrl = { set: null };
+      } else if (typeof updatePostDto.videoUrl === 'string') {
+        data.videoUrl = { set: Buffer.from(updatePostDto.videoUrl, 'base64') };
+      }
+    }
+
     return this.prisma.post.update({
       where: { id },
-      data: updatePostDto,
+      data,
     });
   }
 
