@@ -12,24 +12,15 @@ async function bootstrap() {
 
   // Habilita CORS para seu frontend React
   app.enableCors({
-    origin: '*', // Em produção, mude para seu domínio (appfiton.site)
+    origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Content-Type, Authorization',
   });
 
   const config = new DocumentBuilder()
-    .setTitle('NowFit API')
-    .setDescription('')
+    .setTitle('NowFit Payments API')
+    .setDescription('API para integração com Stripe')
     .setVersion('1.0')
-    .addTag('')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-      },
-      'access-token',
-    )
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);

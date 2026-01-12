@@ -1,98 +1,159 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# NowFit Payments API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API dedicada à integração com o Stripe para processamento de pagamentos.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Tecnologias
 
-## Description
+- NestJS
+- Stripe
+- TypeScript
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 📋 Pré-requisitos
 
-## Project setup
+- Node.js 18+
+- npm ou yarn
+- Conta no Stripe
+
+## 🔧 Instalação
 
 ```bash
-$ npm install
+npm install
 ```
 
-## Compile and run the project
+## ⚙️ Configuração
+
+Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
+
+```env
+# Stripe
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_CURRENCY=brl
+
+# Supabase
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_KEY=your_service_role_key_here
+```
+
+## 🎯 Endpoints Disponíveis
+
+### Configuração
+- `GET /api/payments/config` - Retorna as chaves públicas do Stripe
+
+### Customers
+- `POST /api/payments/create-customer` - Cria um novo customer
+- `GET /api/payments/customer` - Busca customer por email ou ID
+- `GET /api/payments/customers` - Lista customers
+
+### Pagamentos
+- `POST /api/payments/create-payment-intent` - Cria um PaymentIntent
+- `POST /api/payments/checkout` - Cria uma sessão de checkout
+- `GET /api/payments/payment-intent/:id` - Busca um PaymentIntent
+
+### Produtos
+- `POST /api/payments/create-product` - Cria um produto
+- `POST /api/payments/create-price` - Cria um preço para um produto
+
+### Reembolsos
+- `POST /api/payments/refund` - Cria um reembolso
+
+### Webhooks
+- `POST /api/payments/webhook` - Recebe eventos do Stripe
+  - `checkout.session.completed` - Atualiza Flames do usuário automaticamente
+  - `payment_intent.succeeded` - Log de pagamento bem-sucedido
+  - `payment_intent.payment_failed` - Registra falha
+
+## 🚀 Executando
+
+### Desenvolvimento
+```bash
+npm run start:dev
+```
+
+### Produção
+```bash
+npm run build
+npm run start:prod
+```
+
+## 📚 Documentação da API
+
+Acesse `http://localhost:8000/api` para visualizar a documentação Swagger.
+
+## 🔐 Webhooks
+
+Para testar webhooks localmente, use o Stripe CLI:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+stripe listen --forward-to localhost:8000/api/payments/webhook
 ```
 
-## Run tests
+## 📝 Exemplos de Uso
+
+### Criar um Customer
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+curl -X POST http://localhost:8000/api/payments/create-customer \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "customer@example.com",
+    "name": "John Doe"
+  }'
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Criar um Payment Intent
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+curl -X POST http://localhost:8000/api/payments/create-payment-intent \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 100,
+    "customerId": "cus_xxx",
+    "metadata": {
+      "order_id": "123"
+    }
+  }'
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Criar Checkout Session
 
-## Resources
+```bash
+curl -X POST http://localhost:8000/api/payments/checkout \
+  -H "Content-Type: application/json" \
+  -d '{
+    "lineItems": [{
+      "price_data": {
+        "currency": "brl",
+        "product_data": {
+          "name": "Produto Teste"
+        },
+        "unit_amount": 5000
+      },
+      "quantity": 1
+    }],
+    "successUrl": "https://seusite.com/success",
+    "cancelUrl": "https://seusite.com/cancel"
+  }'
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+## 🛠️ Estrutura do Projeto
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```
+src/
+├── stripe/          # Módulo Stripe
+│   ├── stripe.service.ts
+│   └── stripe.module.ts
+├── payments/        # Módulo de Pagamentos
+│   ├── payments.controller.ts
+│   └── payments.module.ts
+├── dto/             # Data Transfer Objects
+│   ├── create-checkout-dto.ts
+│   └── create-payment-intent.dto.ts
+├── app.module.ts    # Módulo principal
+└── main.ts          # Ponto de entrada
+```
 
-## Support
+## 📄 Licença
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Este projeto é privado e proprietário.
